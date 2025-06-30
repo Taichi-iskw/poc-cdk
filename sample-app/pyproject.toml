@@ -1,0 +1,36 @@
+[project]
+name = "spa-api"
+version = "1.0.0"
+description = "Flask API for SPA with authentication"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+dependencies = [
+    "Flask==2.3.3",
+    "Flask-CORS==4.0.0",
+    "gunicorn==21.2.0",
+]
+requires-python = ">=3.11"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest==7.4.0",
+    "pytest-cov==4.1.0",
+    "black==23.7.0",
+    "flake8==6.0.0",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=app --cov-report=html --cov-report=term" 
