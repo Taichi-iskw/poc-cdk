@@ -20,6 +20,7 @@ const spaStack = new SpaStack(app, "SpaStack", {
     region: process.env.CDK_DEFAULT_REGION || "ap-northeast-1",
   },
   description: `SPA with authentication - ${environment} environment`,
+  crossRegionReferences: true,
 });
 
 // CloudFront/ACMなどus-east-1で作成すべきグローバルリソース用Stack
@@ -36,6 +37,7 @@ const globalStack = new SpaGlobalStack(app, "SpaGlobalStack", {
     region: "us-east-1",
   },
   description: `SPA Global resources - ${environment} environment`,
+  crossRegionReferences: true,
 });
 
 // Set dependency: GlobalStack depends on SpaStack
