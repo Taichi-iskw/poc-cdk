@@ -30,6 +30,14 @@ export class AlbService extends Construct {
       loadBalancerName: `${props.environment}-spa-alb`,
     });
 
+    // CloudFrontのマネージドプレフィックスリストID
+    const cloudFrontPrefixListId = "pl-68a54001";
+    this.loadBalancer.connections.allowFrom(
+      ec2.Peer.prefixList(cloudFrontPrefixListId),
+      ec2.Port.tcp(80),
+      "Allow CloudFront only"
+    );
+
     // Create Target Group
     this.targetGroup = new elbv2.ApplicationTargetGroup(this, "TargetGroup", {
       vpc: props.vpc,
