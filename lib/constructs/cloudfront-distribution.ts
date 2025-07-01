@@ -32,9 +32,7 @@ export class CloudFrontDistribution extends Construct {
     });
 
     // Create S3 origin
-    const s3Origin = new origins.S3Origin(props.s3Bucket, {
-      originAccessIdentity: undefined, // Use OAC instead of OAI
-    });
+    const s3Origin = new origins.S3StaticWebsiteOrigin(props.s3Bucket);
 
     // Create ALB origin
     const albOrigin = new origins.LoadBalancerV2Origin(props.albLoadBalancer, {

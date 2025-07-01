@@ -66,8 +66,5 @@ export class Waf extends Construct {
         metricName: "WebACLMetric",
       },
     });
-
-    // Apply removal policy for POC
-    this.webAcl.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
   }
 }

@@ -65,6 +65,12 @@ export class SpaStack extends cdk.Stack {
       exportName: `${props.environment}-spa-alb-load-balancer-arn`,
     });
 
+    new cdk.CfnOutput(this, "AlbLoadBalancerDnsName", {
+      value: albFargate.loadBalancer.loadBalancerDnsName,
+      description: "ALB Load Balancer DNS Name",
+      exportName: `${props.environment}-spa-alb-load-balancer-dns-name`,
+    });
+
     new cdk.CfnOutput(this, "UserPoolArn", {
       value: cognito.userPool.userPoolArn,
       description: "Cognito User Pool ARN",
@@ -81,11 +87,6 @@ export class SpaStack extends cdk.Stack {
     new cdk.CfnOutput(this, "UserPoolId", {
       value: cognito.userPool.userPoolId,
       description: "Cognito User Pool ID",
-    });
-
-    new cdk.CfnOutput(this, "UserPoolClientId", {
-      value: cognito.userPoolClient.userPoolClientId,
-      description: "Cognito User Pool Client ID",
     });
 
     new cdk.CfnOutput(this, "CognitoDomain", {

@@ -41,7 +41,6 @@ export class CognitoAuth extends Construct {
         requireSymbols: true,
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     // Create User Pool Domain

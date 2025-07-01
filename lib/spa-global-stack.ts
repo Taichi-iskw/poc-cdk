@@ -33,6 +33,7 @@ export class SpaGlobalStack extends cdk.Stack {
 
     const albLoadBalancer = elbv2.ApplicationLoadBalancer.fromApplicationLoadBalancerAttributes(this, "ImportedALB", {
       loadBalancerArn: cdk.Fn.importValue(`${props.environment}-spa-alb-load-balancer-arn`),
+      loadBalancerDnsName: cdk.Fn.importValue(`${props.environment}-spa-alb-load-balancer-dns-name`),
       securityGroupId: "sg-placeholder", // This will be replaced by actual SG ID if needed
     });
 
@@ -76,9 +77,6 @@ export class SpaGlobalStack extends cdk.Stack {
       environment: props.environment,
       webAclId: waf.webAcl.attrId,
     });
-
-    // Apply removal policy for POC
-    (this.certificate.node.defaultChild as cdk.CfnResource).applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     // Outputs
     new cdk.CfnOutput(this, "CertificateArn", {

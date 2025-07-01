@@ -28,7 +28,6 @@ export class AlbFargate extends Construct {
     this.repository = new ecr.Repository(this, "Repository", {
       repositoryName: `${props.environment}-spa-api`,
       imageScanOnPush: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
       lifecycleRules: [
         {
           maxImageCount: 5, // Keep only 5 latest images
@@ -41,21 +40,18 @@ export class AlbFargate extends Construct {
       maxAzs: 2,
       natGateways: 1,
     });
-    (vpc.node.defaultChild as cdk.CfnResource).applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     // Create ECS Cluster
     const cluster = new ecs.Cluster(this, "Cluster", {
       vpc,
       clusterName: `${props.environment}-spa-cluster`,
     });
-    (cluster.node.defaultChild as cdk.CfnResource).applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     // Create Task Definition
     const taskDefinition = new ecs.FargateTaskDefinition(this, "TaskDefinition", {
       memoryLimitMiB: 512,
       cpu: 256,
     });
-    (taskDefinition.node.defaultChild as cdk.CfnResource).applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     // Add container to task definition
     const container = taskDefinition.addContainer("AppContainer", {
@@ -80,7 +76,6 @@ export class AlbFargate extends Construct {
       internetFacing: true,
       loadBalancerName: `${props.environment}-spa-alb`,
     });
-    (this.loadBalancer.node.defaultChild as cdk.CfnResource).applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     // Create Target Group
     this.targetGroup = new elbv2.ApplicationTargetGroup(this, "TargetGroup", {
@@ -97,7 +92,6 @@ export class AlbFargate extends Construct {
         unhealthyThresholdCount: 3,
       },
     });
-    (this.targetGroup.node.defaultChild as cdk.CfnResource).applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     // Create Fargate Service
     this.service = new ecs.FargateService(this, "Service", {
@@ -109,8 +103,9 @@ export class AlbFargate extends Construct {
       vpcSubnets: {
         subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
       },
+      minHealthyPercent: 100,
+      maxHealthyPercent: 200,
     });
-    (this.service.node.defaultChild as cdk.CfnResource).applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     // Attach service to target group
     this.service.attachToApplicationTargetGroup(this.targetGroup);
