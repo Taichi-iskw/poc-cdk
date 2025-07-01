@@ -20,3 +20,5 @@ new SpaStack(app, "SpaStack", {
   },
   description: `SPA with authentication - ${environment} environment`,
 });
+
+cdk.RemovalPolicies.of(app).destroy();
