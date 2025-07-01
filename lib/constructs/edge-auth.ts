@@ -31,7 +31,8 @@ export class EdgeAuthFunction extends Construct {
       memorySize: 128,
     });
 
-    // Grant permissions to access Cognito
+    // Grant permissions to access Cognito User Pool
     props.userPool.grant(this.function, "cognito-idp:DescribeUserPool");
+    props.userPool.grant(this.function, "cognito-idp:DescribeUserPoolClient");
   }
 }

@@ -35,17 +35,33 @@ export class GitHubActionsRole extends Construct {
       maxSessionDuration: cdk.Duration.hours(1),
     });
 
-    // Create policy for CDK deployment
+    // Create policy for CDK deployment with minimal permissions
     const cdkDeployPolicy = new iam.Policy(this, "CdkDeployPolicy", {
       policyName: `${props.environment}-cdk-deploy-policy`,
       statements: [
-        // CloudFormation permissions
+        // CloudFormation permissions (limited to specific stacks)
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
-          actions: ["cloudformation:*"],
-          resources: ["*"],
+          actions: [
+            "cloudformation:CreateStack",
+            "cloudformation:UpdateStack",
+            "cloudformation:DeleteStack",
+            "cloudformation:DescribeStacks",
+            "cloudformation:ListStacks",
+            "cloudformation:GetTemplateSummary",
+            "cloudformation:ValidateTemplate",
+            "cloudformation:DescribeStackEvents",
+            "cloudformation:DescribeStackResources",
+          ],
+          resources: [
+            `arn:aws:cloudformation:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:stack/${
+              props.environment
+            }-*/*`,
+            `arn:aws:cloudformation:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:stack/SpaStack/*`,
+            `arn:aws:cloudformation:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:stack/SpaGlobalStack/*`,
+          ],
         }),
-        // IAM permissions for CDK
+        // IAM permissions for CDK (limited to specific roles)
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: [
@@ -59,10 +75,19 @@ export class GitHubActionsRole extends Construct {
             "iam:PassRole",
             "iam:TagRole",
             "iam:UntagRole",
+            "iam:CreatePolicy",
+            "iam:DeletePolicy",
+            "iam:AttachRolePolicy",
+            "iam:DetachRolePolicy",
           ],
-          resources: ["*"],
+          resources: [
+            `arn:aws:iam::${cdk.Stack.of(this).account}:role/${props.environment}-*`,
+            `arn:aws:iam::${cdk.Stack.of(this).account}:policy/${props.environment}-*`,
+            `arn:aws:iam::${cdk.Stack.of(this).account}:role/cdk-*`,
+            `arn:aws:iam::${cdk.Stack.of(this).account}:policy/cdk-*`,
+          ],
         }),
-        // S3 permissions for CDK assets
+        // S3 permissions for CDK assets and static site
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: [
@@ -80,104 +105,258 @@ export class GitHubActionsRole extends Construct {
             "s3:GetObject",
             "s3:DeleteObject",
             "s3:ListBucket",
+            "s3:DeleteBucket",
           ],
           resources: [
-            "arn:aws:s3:::cdk-*",
-            "arn:aws:s3:::cdk-*/*",
-            "arn:aws:s3:::*-spa-static-*",
-            "arn:aws:s3:::*-spa-static-*/*",
+            `arn:aws:s3:::cdk-*`,
+            `arn:aws:s3:::cdk-*/*`,
+            `arn:aws:s3:::${props.environment}-spa-static-*`,
+            `arn:aws:s3:::${props.environment}-spa-static-*/*`,
           ],
         }),
-        // CloudFront permissions
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["cloudfront:*"],
-          resources: ["*"],
-        }),
-        // Cognito permissions
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["cognito-idp:*"],
-          resources: ["*"],
-        }),
-        // Lambda permissions
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["lambda:*"],
-          resources: ["*"],
-        }),
-        // ECS permissions
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["ecs:*"],
-          resources: ["*"],
-        }),
-        // EC2 permissions for VPC and ALB
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["ec2:*"],
-          resources: ["*"],
-        }),
-        // ELB permissions
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["elasticloadbalancing:*"],
-          resources: ["*"],
-        }),
-        // CloudWatch Logs permissions
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["logs:*"],
-          resources: ["*"],
-        }),
-        // Route53 permissions (if using custom domain)
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["route53:*"],
-          resources: ["*"],
-        }),
-        // ACM permissions (if using custom domain)
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["acm:*"],
-          resources: ["*"],
-        }),
-        // Secrets Manager permissions (if needed)
+        // CloudWatch Logs permissions (limited to specific log groups)
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: [
-            "secretsmanager:GetSecretValue",
-            "secretsmanager:CreateSecret",
-            "secretsmanager:UpdateSecret",
-            "secretsmanager:DeleteSecret",
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+            "logs:DescribeLogGroups",
+            "logs:DescribeLogStreams",
+            "logs:DeleteLogGroup",
           ],
-          resources: ["*"],
+          resources: [
+            `arn:aws:logs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:log-group:/aws/lambda/${
+              props.environment
+            }-*`,
+            `arn:aws:logs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:log-group:/aws/ecs/${
+              props.environment
+            }-*`,
+            `arn:aws:logs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:log-group:cdk-*`,
+          ],
         }),
-        // KMS permissions (if using encryption)
+        // ECR permissions (limited to specific repositories)
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: [
-            "kms:Decrypt",
-            "kms:DescribeKey",
-            "kms:Encrypt",
-            "kms:ReEncrypt*",
-            "kms:GenerateDataKey*",
-            "kms:CreateGrant",
-            "kms:ListGrants",
-            "kms:RevokeGrant",
+            "ecr:CreateRepository",
+            "ecr:DeleteRepository",
+            "ecr:DescribeRepositories",
+            "ecr:GetRepositoryPolicy",
+            "ecr:SetRepositoryPolicy",
+            "ecr:DeleteRepositoryPolicy",
+            "ecr:GetLifecyclePolicy",
+            "ecr:PutLifecyclePolicy",
+            "ecr:DeleteLifecyclePolicy",
+          ],
+          resources: [
+            `arn:aws:ecr:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:repository/${props.environment}-*`,
+          ],
+        }),
+        // Lambda permissions (limited to specific functions)
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "lambda:CreateFunction",
+            "lambda:DeleteFunction",
+            "lambda:GetFunction",
+            "lambda:UpdateFunctionCode",
+            "lambda:UpdateFunctionConfiguration",
+            "lambda:AddPermission",
+            "lambda:RemovePermission",
+            "lambda:GetPolicy",
+            "lambda:PutFunctionConcurrency",
+            "lambda:DeleteFunctionConcurrency",
+          ],
+          resources: [
+            `arn:aws:lambda:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:function:${props.environment}-*`,
+            `arn:aws:lambda:us-east-1:${cdk.Stack.of(this).account}:function:${props.environment}-*`,
+          ],
+        }),
+        // ECS permissions (limited to specific clusters and services)
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "ecs:CreateCluster",
+            "ecs:DeleteCluster",
+            "ecs:DescribeClusters",
+            "ecs:CreateService",
+            "ecs:DeleteService",
+            "ecs:UpdateService",
+            "ecs:DescribeServices",
+            "ecs:RegisterTaskDefinition",
+            "ecs:DeregisterTaskDefinition",
+            "ecs:DescribeTaskDefinition",
+            "ecs:ListTasks",
+            "ecs:DescribeTasks",
+          ],
+          resources: [
+            `arn:aws:ecs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:cluster/${props.environment}-*`,
+            `arn:aws:ecs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:service/${props.environment}-*`,
+            `arn:aws:ecs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:task-definition/${
+              props.environment
+            }-*`,
+            `arn:aws:ecs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:task/${props.environment}-*`,
+          ],
+        }),
+        // EC2 permissions (limited to specific VPC and security groups)
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "ec2:CreateVpc",
+            "ec2:DeleteVpc",
+            "ec2:DescribeVpcs",
+            "ec2:CreateSubnet",
+            "ec2:DeleteSubnet",
+            "ec2:DescribeSubnets",
+            "ec2:CreateSecurityGroup",
+            "ec2:DeleteSecurityGroup",
+            "ec2:DescribeSecurityGroups",
+            "ec2:AuthorizeSecurityGroupIngress",
+            "ec2:RevokeSecurityGroupIngress",
+            "ec2:CreateInternetGateway",
+            "ec2:DeleteInternetGateway",
+            "ec2:AttachInternetGateway",
+            "ec2:DetachInternetGateway",
+            "ec2:CreateRouteTable",
+            "ec2:DeleteRouteTable",
+            "ec2:CreateRoute",
+            "ec2:DeleteRoute",
+            "ec2:AssociateRouteTable",
+            "ec2:DisassociateRouteTable",
+            "ec2:CreateNatGateway",
+            "ec2:DeleteNatGateway",
+            "ec2:AllocateAddress",
+            "ec2:ReleaseAddress",
           ],
           resources: ["*"],
+          conditions: {
+            StringEquals: {
+              "aws:RequestTag/Environment": props.environment,
+            },
+          },
+        }),
+        // ELB permissions (limited to specific load balancers)
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "elasticloadbalancing:CreateLoadBalancer",
+            "elasticloadbalancing:DeleteLoadBalancer",
+            "elasticloadbalancing:DescribeLoadBalancers",
+            "elasticloadbalancing:CreateTargetGroup",
+            "elasticloadbalancing:DeleteTargetGroup",
+            "elasticloadbalancing:DescribeTargetGroups",
+            "elasticloadbalancing:CreateListener",
+            "elasticloadbalancing:DeleteListener",
+            "elasticloadbalancing:DescribeListeners",
+            "elasticloadbalancing:ModifyListener",
+            "elasticloadbalancing:RegisterTargets",
+            "elasticloadbalancing:DeregisterTargets",
+          ],
+          resources: [
+            `arn:aws:elasticloadbalancing:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:loadbalancer/${
+              props.environment
+            }-*`,
+            `arn:aws:elasticloadbalancing:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:targetgroup/${
+              props.environment
+            }-*`,
+            `arn:aws:elasticloadbalancing:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:listener/${
+              props.environment
+            }-*`,
+          ],
+        }),
+        // Cognito permissions (limited to specific user pools)
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "cognito-idp:CreateUserPool",
+            "cognito-idp:DeleteUserPool",
+            "cognito-idp:DescribeUserPool",
+            "cognito-idp:UpdateUserPool",
+            "cognito-idp:CreateUserPoolClient",
+            "cognito-idp:DeleteUserPoolClient",
+            "cognito-idp:DescribeUserPoolClient",
+            "cognito-idp:UpdateUserPoolClient",
+            "cognito-idp:CreateUserPoolDomain",
+            "cognito-idp:DeleteUserPoolDomain",
+            "cognito-idp:DescribeUserPoolDomain",
+            "cognito-idp:CreateUserPoolUser",
+            "cognito-idp:DeleteUserPoolUser",
+          ],
+          resources: [
+            `arn:aws:cognito-idp:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:userpool/${
+              props.environment
+            }-*`,
+          ],
+        }),
+        // CloudFront permissions (limited to specific distributions)
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "cloudfront:CreateDistribution",
+            "cloudfront:DeleteDistribution",
+            "cloudfront:GetDistribution",
+            "cloudfront:UpdateDistribution",
+            "cloudfront:CreateInvalidation",
+            "cloudfront:GetInvalidation",
+            "cloudfront:ListInvalidations",
+          ],
+          resources: [`arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/*`],
+        }),
+        // ACM permissions (limited to specific certificates)
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "acm:RequestCertificate",
+            "acm:DeleteCertificate",
+            "acm:DescribeCertificate",
+            "acm:ListCertificates",
+            "acm:GetCertificate",
+          ],
+          resources: [
+            `arn:aws:acm:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:certificate/*`,
+            `arn:aws:acm:us-east-1:${cdk.Stack.of(this).account}:certificate/*`,
+          ],
+        }),
+        // WAF permissions (limited to specific web ACLs)
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "wafv2:CreateWebACL",
+            "wafv2:DeleteWebACL",
+            "wafv2:GetWebACL",
+            "wafv2:UpdateWebACL",
+            "wafv2:ListWebACLs",
+            "wafv2:CreateIPSet",
+            "wafv2:DeleteIPSet",
+            "wafv2:GetIPSet",
+            "wafv2:UpdateIPSet",
+            "wafv2:ListIPSets",
+            "wafv2:CreateRuleGroup",
+            "wafv2:DeleteRuleGroup",
+            "wafv2:GetRuleGroup",
+            "wafv2:UpdateRuleGroup",
+            "wafv2:ListRuleGroups",
+          ],
+          resources: [
+            `arn:aws:wafv2:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:regional/webacl/${
+              props.environment
+            }-*`,
+            `arn:aws:wafv2:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:regional/ipset/${
+              props.environment
+            }-*`,
+            `arn:aws:wafv2:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:regional/rulegroup/${
+              props.environment
+            }-*`,
+            `arn:aws:wafv2:us-east-1:${cdk.Stack.of(this).account}:global/webacl/${props.environment}-*`,
+            `arn:aws:wafv2:us-east-1:${cdk.Stack.of(this).account}:global/ipset/${props.environment}-*`,
+            `arn:aws:wafv2:us-east-1:${cdk.Stack.of(this).account}:global/rulegroup/${props.environment}-*`,
+          ],
         }),
       ],
     });
 
     // Attach policy to role
     this.role.attachInlinePolicy(cdkDeployPolicy);
-
-    // Add managed policy for CloudWatch Logs
-    this.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName("CloudWatchLogsFullAccess"));
-
-    // Add managed policy for AWSCloudFormationFullAccess
-    this.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName("AWSCloudFormationFullAccess"));
   }
 }

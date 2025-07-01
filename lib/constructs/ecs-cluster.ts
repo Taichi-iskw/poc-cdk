@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as ecr from "aws-cdk-lib/aws-ecr";
+import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 
 export interface EcsClusterProps {
@@ -51,5 +52,9 @@ export class EcsCluster extends Construct {
         },
       ],
     });
+
+    // Grant ECR permissions to task execution role
+    props.repository.grantPull(this.taskDefinition.taskRole);
+    props.repository.grantPull(this.taskDefinition.executionRole!);
   }
 }

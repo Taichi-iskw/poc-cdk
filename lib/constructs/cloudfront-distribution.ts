@@ -133,7 +133,7 @@ export class CloudFrontDistribution extends Construct {
       originAccessControl.attrId
     );
 
-    // Grant CloudFront access to S3 bucket
+    // Grant CloudFront access to S3 bucket using OAC
     props.s3Bucket.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
