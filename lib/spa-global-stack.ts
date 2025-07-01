@@ -77,20 +77,22 @@ export class SpaGlobalStack extends cdk.Stack {
       edgeAuthFunction: this.edgeAuthFunction.function,
       domainName: props.domainName,
       environment: props.environment,
+      certificate: this.certificate,
       webAclId: waf.webAcl.attrId,
     });
 
     // Route53: HostedZone lookup & ARecord for CloudFront
-    const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
-      domainName: props.domainName,
-    });
-    new route53.ARecord(this, "CloudFrontAliasRecord", {
-      zone: hostedZone,
-      recordName: props.environment === "prod" ? props.domainName : `${props.environment}.${props.domainName}`,
-      target: route53.RecordTarget.fromAlias(
-        new route53_targets.CloudFrontTarget(this.cloudFrontDistribution.distribution)
-      ),
-    });
+    // Note: Uncomment after first deployment when HostedZone is available
+    // const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+    //   domainName: props.domainName,
+    // });
+    // new route53.ARecord(this, "CloudFrontAliasRecord", {
+    //   zone: hostedZone,
+    //   recordName: props.environment === "prod" ? props.domainName : `${props.environment}.${props.domainName}`,
+    //   target: route53.RecordTarget.fromAlias(
+    //     new route53_targets.CloudFrontTarget(this.cloudFrontDistribution.distribution)
+    //   ),
+    // });
 
     // Outputs
     new cdk.CfnOutput(this, "CertificateArn", {

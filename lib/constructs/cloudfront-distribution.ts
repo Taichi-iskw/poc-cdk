@@ -4,6 +4,7 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { Construct } from "constructs";
 
 export interface CloudFrontDistributionProps {
@@ -12,6 +13,7 @@ export interface CloudFrontDistributionProps {
   edgeAuthFunction: lambda.Function;
   domainName: string;
   environment: string;
+  certificate: acm.ICertificate;
   webAclId?: string; // Optional WAF Web ACL ID
 }
 
@@ -123,6 +125,8 @@ export class CloudFrontDistribution extends Construct {
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
       comment: `${props.environment} SPA with authentication`,
       webAclId: props.webAclId, // WAF Web ACLを関連付け
+      certificate: props.certificate,
+      domainNames: [props.environment === "prod" ? props.domainName : `${props.environment}.${props.domainName}`],
     });
 
     // Update S3 bucket policy to use OAC
