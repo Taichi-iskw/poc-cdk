@@ -28,10 +28,6 @@ const globalStack = new SpaGlobalStack(app, "SpaGlobalStack", {
   domainName,
   environment,
   repository,
-  s3Bucket: spaStack.s3Bucket,
-  albLoadBalancer: spaStack.albLoadBalancer,
-  userPool: spaStack.userPool,
-  userPoolClient: spaStack.userPoolClient,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "us-east-1",
@@ -39,9 +35,6 @@ const globalStack = new SpaGlobalStack(app, "SpaGlobalStack", {
   description: `SPA Global resources - ${environment} environment`,
   crossRegionReferences: true,
 });
-
-// Set dependency: GlobalStack depends on SpaStack
-globalStack.addDependency(spaStack);
 
 // Apply removal policy to all resources for POC
 // Note: Individual resources should set their own removal policy in their construct definitions
