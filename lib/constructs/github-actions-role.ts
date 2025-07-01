@@ -353,6 +353,20 @@ export class GitHubActionsRole extends Construct {
             `arn:aws:wafv2:us-east-1:${cdk.Stack.of(this).account}:global/rulegroup/${props.environment}-*`,
           ],
         }),
+        // Route53 permissions (for domain and DNS management)
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "route53:ListHostedZones",
+            "route53:GetChange",
+            "route53:ChangeResourceRecordSets",
+            "route53:ListResourceRecordSets",
+            "route53:GetHostedZone",
+            "route53:CreateHostedZone",
+            "route53:DeleteHostedZone",
+          ],
+          resources: [`arn:aws:route53:::hostedzone/*`, `arn:aws:route53:::change/*`],
+        }),
       ],
     });
 

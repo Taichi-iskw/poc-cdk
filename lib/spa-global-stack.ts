@@ -3,6 +3,8 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53_targets from "aws-cdk-lib/aws-route53-targets";
 import { Construct } from "constructs";
 import { CloudFrontDistribution } from "./constructs/cloudfront-distribution";
 import { EdgeAuthFunction } from "./constructs/edge-auth";
@@ -76,6 +78,18 @@ export class SpaGlobalStack extends cdk.Stack {
       domainName: props.domainName,
       environment: props.environment,
       webAclId: waf.webAcl.attrId,
+    });
+
+    // Route53: HostedZone lookup & ARecord for CloudFront
+    const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+      domainName: props.domainName,
+    });
+    new route53.ARecord(this, "CloudFrontAliasRecord", {
+      zone: hostedZone,
+      recordName: props.environment === "prod" ? props.domainName : `${props.environment}.${props.domainName}`,
+      target: route53.RecordTarget.fromAlias(
+        new route53_targets.CloudFrontTarget(this.cloudFrontDistribution.distribution)
+      ),
     });
 
     // Outputs
