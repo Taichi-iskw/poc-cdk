@@ -40,7 +40,7 @@ export class CloudFrontDistribution extends Construct {
     this.distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultBehavior: {
         origin: props.s3Bucket
-          ? new origins.S3Origin(props.s3Bucket)
+          ? new origins.S3StaticWebsiteOrigin(props.s3Bucket)
           : new origins.HttpOrigin("placeholder.example.com"), // Fallback for development
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
@@ -128,7 +128,7 @@ export class CloudFrontDistribution extends Construct {
             },
             "/callback": {
               origin: props.s3Bucket
-                ? new origins.S3Origin(props.s3Bucket)
+                ? new origins.S3StaticWebsiteOrigin(props.s3Bucket)
                 : new origins.HttpOrigin("placeholder.example.com"),
               viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
               allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
@@ -139,7 +139,7 @@ export class CloudFrontDistribution extends Construct {
             },
             "/logout": {
               origin: props.s3Bucket
-                ? new origins.S3Origin(props.s3Bucket)
+                ? new origins.S3StaticWebsiteOrigin(props.s3Bucket)
                 : new origins.HttpOrigin("placeholder.example.com"),
               viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
               allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
