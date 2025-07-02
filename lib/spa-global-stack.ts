@@ -6,9 +6,9 @@ import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53_targets from "aws-cdk-lib/aws-route53-targets";
 import { Construct } from "constructs";
-import { CloudFrontDistribution } from "./constructs/cloudfront-distribution";
-import { EdgeAuthFunction } from "./constructs/edge-auth";
-import { Waf } from "./constructs/waf";
+import { CloudFrontDistribution } from "./constructs/global/cloudfront-distribution";
+import { EdgeAuthFunction } from "./constructs/global/edge-auth";
+import { Waf } from "./constructs/global/waf";
 // 必要に応じてACMや他のリソースもimport
 
 export interface SpaGlobalStackProps extends cdk.StackProps {

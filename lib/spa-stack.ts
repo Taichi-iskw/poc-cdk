@@ -1,9 +1,9 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { S3StaticSite } from "./constructs/s3-static-site";
-import { CognitoAuth } from "./constructs/cognito";
-import { AlbFargate } from "./constructs/alb-fargate";
-import { GitHubOidc } from "./constructs/github-oidc";
+import { S3StaticSite } from "./constructs/regional/s3-static-site";
+import { CognitoAuth } from "./constructs/regional/cognito";
+import { AlbFargate } from "./constructs/regional/alb-fargate";
+import { GitHubOidc } from "./constructs/regional/github-oidc";
 
 export interface SpaStackProps extends cdk.StackProps {
   domainName: string;
