@@ -118,5 +118,11 @@ export class SpaStack extends cdk.Stack {
       value: albFargate.repository.repositoryName,
       description: "ECR Repository Name",
     });
+
+    // Configure CloudFront origins after all resources are created
+    // This will be called by the global stack after this stack is deployed
+    this.node.addDependency(albFargate);
+    this.node.addDependency(cognito);
+    this.node.addDependency(s3Site);
   }
 }

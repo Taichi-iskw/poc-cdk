@@ -11,19 +11,7 @@ const domainName = process.env.DOMAIN_NAME || "example.com";
 const environment = process.env.ENVIRONMENT || "dev";
 const repository = process.env.GITHUB_REPOSITORY || "username/poc-cdk";
 
-const spaStack = new SpaStack(app, "SpaStack", {
-  domainName,
-  environment,
-  repository,
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION || "ap-northeast-1",
-  },
-  description: `SPA with authentication - ${environment} environment`,
-  crossRegionReferences: true,
-});
-
-// CloudFront/ACMなどus-east-1で作成すべきグローバルリソース用Stack
+// CloudFront/ACMなどus-east-1で作成すべきグローバルリソース用Stack（先に作成）
 const globalStack = new SpaGlobalStack(app, "SpaGlobalStack", {
   domainName,
   environment,
@@ -33,6 +21,19 @@ const globalStack = new SpaGlobalStack(app, "SpaGlobalStack", {
     region: "us-east-1",
   },
   description: `SPA Global resources - ${environment} environment`,
+  crossRegionReferences: true,
+});
+
+// Regional resources (ap-northeast-1) - 後で作成
+const spaStack = new SpaStack(app, "SpaStack", {
+  domainName,
+  environment,
+  repository,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION || "ap-northeast-1",
+  },
+  description: `SPA with authentication - ${environment} environment`,
   crossRegionReferences: true,
 });
 

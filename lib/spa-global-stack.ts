@@ -19,33 +19,12 @@ export interface SpaGlobalStackProps extends cdk.StackProps {
 
 export class SpaGlobalStack extends cdk.Stack {
   public readonly certificate: acm.Certificate;
-  public readonly cloudFrontDistribution: any;
-  public readonly edgeAuthFunction: any;
+  public readonly cloudFrontDistribution: CloudFrontDistribution;
+  public readonly edgeAuthFunction: EdgeAuthFunction;
   public readonly webAcl: any;
 
   constructor(scope: Construct, id: string, props: SpaGlobalStackProps) {
     super(scope, id, props);
-
-    // Import resources from SpaStack
-    const s3Bucket = s3.Bucket.fromBucketName(
-      this,
-      "ImportedS3Bucket",
-      cdk.Fn.importValue(`${props.environment}-spa-s3-bucket-name`)
-    );
-
-    const albLoadBalancer = elbv2.ApplicationLoadBalancer.fromApplicationLoadBalancerAttributes(this, "ImportedALB", {
-      loadBalancerArn: cdk.Fn.importValue(`${props.environment}-spa-alb-load-balancer-arn`),
-      loadBalancerDnsName: cdk.Fn.importValue(`${props.environment}-spa-alb-load-balancer-dns-name`),
-      securityGroupId: "sg-placeholder", // This will be replaced by actual SG ID if needed
-    });
-
-    const userPool = cognito.UserPool.fromUserPoolArn(
-      this,
-      "ImportedUserPool",
-      cdk.Fn.importValue(`${props.environment}-spa-user-pool-arn`)
-    );
-
-    const userPoolClientId = cdk.Fn.importValue(`${props.environment}-spa-user-pool-client-id`);
 
     // Create ACM Certificate for CloudFront
     this.certificate = new acm.Certificate(this, "Certificate", {
@@ -65,20 +44,26 @@ export class SpaGlobalStack extends cdk.Stack {
 
     // Create Lambda@Edge function for authentication
     this.edgeAuthFunction = new EdgeAuthFunction(this, "EdgeAuthFunction", {
-      userPool: userPool,
-      userPoolClient: cognito.UserPoolClient.fromUserPoolClientId(this, "ImportedUserPoolClient", userPoolClientId),
+      userPool: cognito.UserPool.fromUserPoolArn(
+        this,
+        "ImportedUserPool",
+        cdk.Fn.importValue(`${props.environment}-spa-user-pool-arn`)
+      ),
+      userPoolClient: cognito.UserPoolClient.fromUserPoolClientId(
+        this,
+        "ImportedUserPoolClient",
+        cdk.Fn.importValue(`${props.environment}-spa-user-pool-client-id`)
+      ),
       environment: props.environment,
     });
 
-    // Create CloudFront distribution
+    // Create CloudFront distribution (basic configuration only)
     this.cloudFrontDistribution = new CloudFrontDistribution(this, "CloudFrontDistribution", {
-      s3Bucket: s3Bucket,
-      albLoadBalancer: albLoadBalancer,
-      edgeAuthFunction: this.edgeAuthFunction.function,
       domainName: props.domainName,
       environment: props.environment,
       certificate: this.certificate,
       webAclId: waf.webAcl.attrId,
+      edgeAuthFunction: this.edgeAuthFunction.function,
     });
 
     // Route53: HostedZone lookup & ARecord for CloudFront
@@ -113,6 +98,29 @@ export class SpaGlobalStack extends cdk.Stack {
     new cdk.CfnOutput(this, "CloudFrontDomainName", {
       value: this.cloudFrontDistribution.distribution.distributionDomainName,
       description: "CloudFront Domain Name",
+    });
+  }
+
+  // Method to configure CloudFront origins after regional resources are created
+  public configureCloudFrontOrigins(): void {
+    // Import resources from SpaStack
+    const s3Bucket = s3.Bucket.fromBucketName(
+      this,
+      "ImportedS3Bucket",
+      cdk.Fn.importValue(`${this.environment}-spa-s3-bucket-name`)
+    );
+
+    const albLoadBalancer = elbv2.ApplicationLoadBalancer.fromApplicationLoadBalancerAttributes(this, "ImportedALB", {
+      loadBalancerArn: cdk.Fn.importValue(`${this.environment}-spa-alb-load-balancer-arn`),
+      loadBalancerDnsName: cdk.Fn.importValue(`${this.environment}-spa-alb-load-balancer-dns-name`),
+      securityGroupId: "sg-placeholder", // This will be replaced by actual SG ID if needed
+    });
+
+    // Configure CloudFront origins
+    this.cloudFrontDistribution.configureOrigins({
+      s3Bucket,
+      albLoadBalancer,
+      edgeAuthFunction: this.edgeAuthFunction.function,
     });
   }
 }

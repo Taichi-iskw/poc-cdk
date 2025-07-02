@@ -1,7 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { GitHubActionsRole } from "./github-actions-role";
-import { ProductionRestrictions } from "./production-restrictions";
 
 export interface GitHubOidcProps {
   repository: string; // e.g., "username/repository"
@@ -20,11 +19,5 @@ export class GitHubOidc extends Construct {
       environment: props.environment,
     });
     this.role = githubActionsRole.role;
-
-    // Apply production restrictions if needed
-    new ProductionRestrictions(this, "ProductionRestrictions", {
-      environment: props.environment,
-      role: githubActionsRole.role,
-    });
   }
 }
