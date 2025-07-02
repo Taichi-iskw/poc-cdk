@@ -12,6 +12,8 @@ export interface SpaStackProps extends cdk.StackProps {
   domainName: string;
   environment: string;
   repository: string; // GitHub repository (e.g., "username/repository")
+  baseName: string;
+  account: string;
 }
 
 export class SpaStack extends cdk.Stack {
@@ -25,7 +27,8 @@ export class SpaStack extends cdk.Stack {
 
     // Create S3 static site
     const s3Site = new S3StaticSite(this, "S3StaticSite", {
-      bucketName: `${props.environment}-spa-static-${this.account}`,
+      baseName: props.baseName,
+      account: props.account,
     });
     this.s3Bucket = s3Site.bucket;
 
@@ -33,6 +36,8 @@ export class SpaStack extends cdk.Stack {
     const cognito = new CognitoAuth(this, "CognitoAuth", {
       domainName: props.domainName,
       environment: props.environment,
+      baseName: props.baseName,
+      account: props.account,
     });
     this.userPool = cognito.userPool;
     this.userPoolClient = cognito.userPoolClient;
@@ -40,6 +45,7 @@ export class SpaStack extends cdk.Stack {
     // Create ALB + Fargate backend
     const albFargate = new AlbFargate(this, "AlbFargate", {
       environment: props.environment,
+      baseName: props.baseName,
       userPool: cognito.userPool,
       userPoolClient: cognito.albUserPoolClient,
       userPoolDomain: cognito.userPoolDomain,
@@ -53,37 +59,38 @@ export class SpaStack extends cdk.Stack {
     const githubOidc = new GitHubOidc(this, "GitHubOidc", {
       repository: props.repository,
       environment: props.environment,
+      baseName: props.baseName,
     });
 
     // Export resources for cross-stack reference
     new cdk.CfnOutput(this, "S3BucketName", {
       value: s3Site.bucket.bucketName,
       description: "S3 Bucket Name",
-      exportName: `${props.environment}-spa-s3-bucket-name`,
+      exportName: `${props.baseName}-s3-bucket-name`,
     });
 
     new cdk.CfnOutput(this, "AlbLoadBalancerArn", {
       value: albFargate.loadBalancer.loadBalancerArn,
       description: "ALB Load Balancer ARN",
-      exportName: `${props.environment}-spa-alb-load-balancer-arn`,
+      exportName: `${props.baseName}-alb-load-balancer-arn`,
     });
 
     new cdk.CfnOutput(this, "AlbLoadBalancerDnsName", {
       value: albFargate.loadBalancer.loadBalancerDnsName,
       description: "ALB Load Balancer DNS Name",
-      exportName: `${props.environment}-spa-alb-load-balancer-dns-name`,
+      exportName: `${props.baseName}-alb-load-balancer-dns-name`,
     });
 
     new cdk.CfnOutput(this, "UserPoolArn", {
       value: cognito.userPool.userPoolArn,
       description: "Cognito User Pool ARN",
-      exportName: `${props.environment}-spa-user-pool-arn`,
+      exportName: `${props.baseName}-user-pool-arn`,
     });
 
     new cdk.CfnOutput(this, "UserPoolClientId", {
       value: cognito.userPoolClient.userPoolClientId,
       description: "Cognito User Pool Client ID",
-      exportName: `${props.environment}-spa-user-pool-client-id`,
+      exportName: `${props.baseName}-user-pool-client-id`,
     });
 
     // Outputs

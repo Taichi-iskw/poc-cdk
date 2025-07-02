@@ -4,7 +4,8 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 
 export interface S3StaticSiteProps {
-  bucketName: string;
+  baseName: string;
+  account: string;
 }
 
 export class S3StaticSite extends Construct {
@@ -15,7 +16,7 @@ export class S3StaticSite extends Construct {
 
     // Create S3 bucket for static site hosting
     this.bucket = new s3.Bucket(this, "StaticSiteBucket", {
-      bucketName: props.bucketName,
+      bucketName: `${props.baseName}-static-${props.account}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,

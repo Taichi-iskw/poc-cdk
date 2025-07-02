@@ -8,6 +8,8 @@ export interface EdgeAuthFunctionProps {
   userPool: cognito.IUserPool;
   userPoolClient: cognito.IUserPoolClient;
   environment: string;
+  baseName: string;
+  account: string;
 }
 
 export class EdgeAuthFunction extends Construct {
@@ -24,7 +26,7 @@ export class EdgeAuthFunction extends Construct {
       environment: {
         USER_POOL_ID: props.userPool.userPoolId,
         USER_POOL_CLIENT_ID: props.userPoolClient.userPoolClientId,
-        COGNITO_DOMAIN: `${props.environment}-spa-${cdk.Stack.of(this).account}`,
+        COGNITO_DOMAIN: `${props.baseName}-${props.account}`,
         CALLBACK_URL: `https://${props.environment === "dev" ? "dev." : ""}example.com/callback`,
       },
       timeout: cdk.Duration.seconds(5),

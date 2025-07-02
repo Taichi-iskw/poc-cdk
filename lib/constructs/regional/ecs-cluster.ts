@@ -7,6 +7,7 @@ import { Construct } from "constructs";
 
 export interface EcsClusterProps {
   environment: string;
+  baseName: string;
   repository: ecr.Repository;
 }
 
@@ -27,7 +28,7 @@ export class EcsCluster extends Construct {
     // Create ECS Cluster
     this.cluster = new ecs.Cluster(this, "Cluster", {
       vpc: this.vpc,
-      clusterName: `${props.environment}-spa-cluster`,
+      clusterName: `${props.baseName}-cluster`,
     });
 
     // Create Task Definition

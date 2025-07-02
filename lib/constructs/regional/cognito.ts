@@ -5,6 +5,8 @@ import { Construct } from "constructs";
 export interface CognitoAuthProps {
   domainName: string;
   environment: string;
+  baseName: string;
+  account: string;
 }
 
 export class CognitoAuth extends Construct {
@@ -18,7 +20,7 @@ export class CognitoAuth extends Construct {
 
     // Create Cognito User Pool
     this.userPool = new cognito.UserPool(this, "UserPool", {
-      userPoolName: `${props.environment}-spa-user-pool`,
+      userPoolName: `${props.baseName}-user-pool`,
       selfSignUpEnabled: true,
       signInAliases: {
         email: true,
@@ -47,7 +49,7 @@ export class CognitoAuth extends Construct {
     this.userPoolDomain = new cognito.UserPoolDomain(this, "UserPoolDomain", {
       userPool: this.userPool,
       cognitoDomain: {
-        domainPrefix: `${props.environment}-spa-${cdk.Stack.of(this).account}`,
+        domainPrefix: `${props.baseName}-${props.account}`,
       },
     });
 

@@ -16,6 +16,7 @@ export interface SpaGlobalStackProps extends cdk.StackProps {
   domainName: string;
   environment: string;
   repository: string;
+  baseName: string;
 }
 
 export class SpaGlobalStack extends cdk.Stack {
@@ -23,9 +24,11 @@ export class SpaGlobalStack extends cdk.Stack {
   public readonly cloudFrontDistribution: CloudFrontDistribution;
   public readonly edgeAuthFunction: EdgeAuthFunction;
   public readonly webAcl: wafv2.CfnWebACL;
+  public readonly baseName: string;
 
   constructor(scope: Construct, id: string, props: SpaGlobalStackProps) {
     super(scope, id, props);
+    this.baseName = props.baseName;
 
     // Create ACM Certificate for CloudFront
     this.certificate = new acm.Certificate(this, "Certificate", {
@@ -40,6 +43,7 @@ export class SpaGlobalStack extends cdk.Stack {
     // Create WAF Web ACL
     const waf = new Waf(this, "Waf", {
       environment: props.environment,
+      baseName: props.baseName,
     });
     this.webAcl = waf.webAcl;
 
@@ -48,20 +52,23 @@ export class SpaGlobalStack extends cdk.Stack {
       userPool: cognito.UserPool.fromUserPoolArn(
         this,
         "ImportedUserPool",
-        cdk.Fn.importValue(`${props.environment}-spa-user-pool-arn`)
+        cdk.Fn.importValue(`${props.baseName}-user-pool-arn`)
       ),
       userPoolClient: cognito.UserPoolClient.fromUserPoolClientId(
         this,
         "ImportedUserPoolClient",
-        cdk.Fn.importValue(`${props.environment}-spa-user-pool-client-id`)
+        cdk.Fn.importValue(`${props.baseName}-user-pool-client-id`)
       ),
       environment: props.environment,
+      baseName: props.baseName,
+      account: process.env.CDK_DEFAULT_ACCOUNT || "000000000000",
     });
 
     // Create CloudFront distribution (basic configuration only)
     this.cloudFrontDistribution = new CloudFrontDistribution(this, "CloudFrontDistribution", {
       domainName: props.domainName,
       environment: props.environment,
+      baseName: props.baseName,
       certificate: this.certificate,
       webAclId: waf.webAcl.attrId,
       edgeAuthFunction: this.edgeAuthFunction.function,
@@ -108,12 +115,12 @@ export class SpaGlobalStack extends cdk.Stack {
     const s3Bucket = s3.Bucket.fromBucketName(
       this,
       "ImportedS3Bucket",
-      cdk.Fn.importValue(`${this.environment}-spa-s3-bucket-name`)
+      cdk.Fn.importValue(`${this.baseName}-s3-bucket-name`)
     );
 
     const albLoadBalancer = elbv2.ApplicationLoadBalancer.fromApplicationLoadBalancerAttributes(this, "ImportedALB", {
-      loadBalancerArn: cdk.Fn.importValue(`${this.environment}-spa-alb-load-balancer-arn`),
-      loadBalancerDnsName: cdk.Fn.importValue(`${this.environment}-spa-alb-load-balancer-dns-name`),
+      loadBalancerArn: cdk.Fn.importValue(`${this.baseName}-alb-load-balancer-arn`),
+      loadBalancerDnsName: cdk.Fn.importValue(`${this.baseName}-alb-load-balancer-dns-name`),
       securityGroupId: "sg-placeholder", // This will be replaced by actual SG ID if needed
     });
 

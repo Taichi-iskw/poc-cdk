@@ -5,6 +5,7 @@ import { Construct } from "constructs";
 export interface GitHubActionsRoleProps {
   repository: string; // e.g., "username/repository"
   environment: string;
+  baseName: string;
 }
 
 export class GitHubActionsRole extends Construct {
@@ -22,7 +23,7 @@ export class GitHubActionsRole extends Construct {
 
     // Create IAM Role for GitHub Actions
     this.role = new iam.Role(this, "GitHubActionsRole", {
-      roleName: `${props.environment}-github-actions-role`,
+      roleName: `${props.baseName}-github-actions-role`,
       assumedBy: new iam.WebIdentityPrincipal(githubOidcProvider.openIdConnectProviderArn, {
         StringEquals: {
           "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
@@ -37,7 +38,7 @@ export class GitHubActionsRole extends Construct {
 
     // Create policy for CDK deployment with minimal permissions
     const cdkDeployPolicy = new iam.Policy(this, "CdkDeployPolicy", {
-      policyName: `${props.environment}-cdk-deploy-policy`,
+      policyName: `${props.baseName}-cdk-deploy-policy`,
       statements: [
         // CloudFormation permissions (limited to specific stacks)
         new iam.PolicyStatement({

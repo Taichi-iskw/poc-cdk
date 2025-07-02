@@ -6,6 +6,7 @@ import { GitHubActionsRole } from "./github-actions-role";
 export interface GitHubOidcProps {
   repository: string; // e.g., "username/repository"
   environment: string;
+  baseName: string;
 }
 
 export class GitHubOidc extends Construct {
@@ -18,6 +19,7 @@ export class GitHubOidc extends Construct {
     const githubActionsRole = new GitHubActionsRole(this, "GitHubActionsRole", {
       repository: props.repository,
       environment: props.environment,
+      baseName: props.baseName,
     });
     this.role = githubActionsRole.role;
   }

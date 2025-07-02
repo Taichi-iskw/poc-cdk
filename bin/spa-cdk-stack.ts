@@ -10,12 +10,15 @@ const app = new cdk.App();
 const domainName = process.env.DOMAIN_NAME || "example.com";
 const environment = process.env.ENVIRONMENT || "dev";
 const repository = process.env.GITHUB_REPOSITORY || "username/poc-cdk";
+const account = process.env.CDK_DEFAULT_ACCOUNT || "000000000000";
+const baseName = `spa-${environment}`;
 
 // CloudFront/ACMなどus-east-1で作成すべきグローバルリソース用Stack（先に作成）
 const globalStack = new SpaGlobalStack(app, "SpaGlobalStack", {
   domainName,
   environment,
   repository,
+  baseName,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "us-east-1",
@@ -29,6 +32,8 @@ const spaStack = new SpaStack(app, "SpaStack", {
   domainName,
   environment,
   repository,
+  baseName,
+  account,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || "ap-northeast-1",

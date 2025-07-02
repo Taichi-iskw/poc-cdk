@@ -4,6 +4,7 @@ import { Construct } from "constructs";
 
 export interface EcrRepositoryProps {
   environment: string;
+  baseName: string;
 }
 
 export class EcrRepository extends Construct {
@@ -14,7 +15,7 @@ export class EcrRepository extends Construct {
 
     // Create ECR Repository
     this.repository = new ecr.Repository(this, "Repository", {
-      repositoryName: `${props.environment}-spa-api`,
+      repositoryName: `${props.baseName}-api`,
       imageScanOnPush: true,
       lifecycleRules: [
         {

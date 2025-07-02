@@ -4,6 +4,7 @@ import { Construct } from "constructs";
 
 export interface WafProps {
   environment: string;
+  baseName: string;
 }
 
 export class Waf extends Construct {
@@ -14,7 +15,7 @@ export class Waf extends Construct {
 
     // Create WAF Web ACL with basic AWS Managed Rules
     this.webAcl = new wafv2.CfnWebACL(this, "WebACL", {
-      name: `${props.environment}-spa-web-acl`,
+      name: `${props.baseName}-web-acl`,
       description: "WAF Web ACL for SPA application with basic AWS Managed Rules",
       scope: "CLOUDFRONT", // CloudFront用
       defaultAction: {

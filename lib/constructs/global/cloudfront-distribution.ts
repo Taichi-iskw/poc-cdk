@@ -10,6 +10,7 @@ import { Construct } from "constructs";
 export interface CloudFrontDistributionProps {
   domainName: string;
   environment: string;
+  baseName: string;
   certificate: acm.ICertificate;
   webAclId?: string; // Optional WAF Web ACL ID
   edgeAuthFunction?: lambda.Function; // Optional for initial creation
@@ -32,7 +33,7 @@ export class CloudFrontDistribution extends Construct {
     // Create CloudFront Origin Access Control for S3
     this.originAccessControl = new cloudfront.CfnOriginAccessControl(this, "OriginAccessControl", {
       originAccessControlConfig: {
-        name: `${props.environment}-spa-oac`,
+        name: `${props.baseName}-oac`,
         originAccessControlOriginType: "s3",
         signingBehavior: "always",
         signingProtocol: "sigv4",

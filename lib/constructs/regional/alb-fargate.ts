@@ -10,6 +10,7 @@ import { AlbService } from "./alb-service";
 
 export interface AlbFargateProps {
   environment: string;
+  baseName: string;
   userPool: cognito.UserPool;
   userPoolClient: cognito.UserPoolClient;
   userPoolDomain: cognito.UserPoolDomain;
@@ -27,18 +28,21 @@ export class AlbFargate extends Construct {
     // Create ECR Repository
     const ecrRepo = new EcrRepository(this, "EcrRepository", {
       environment: props.environment,
+      baseName: props.baseName,
     });
     this.repository = ecrRepo.repository;
 
     // Create ECS Cluster
     const ecsCluster = new EcsCluster(this, "EcsCluster", {
       environment: props.environment,
+      baseName: props.baseName,
       repository: ecrRepo.repository,
     });
 
     // Create ALB Service
     const albService = new AlbService(this, "AlbService", {
       environment: props.environment,
+      baseName: props.baseName,
       vpc: ecsCluster.vpc,
       cluster: ecsCluster.cluster,
       taskDefinition: ecsCluster.taskDefinition,

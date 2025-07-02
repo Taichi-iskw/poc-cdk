@@ -7,6 +7,7 @@ import { Construct } from "constructs";
 
 export interface AlbServiceProps {
   environment: string;
+  baseName: string;
   vpc: ec2.Vpc;
   cluster: ecs.Cluster;
   taskDefinition: ecs.FargateTaskDefinition;
@@ -27,7 +28,7 @@ export class AlbService extends Construct {
     this.loadBalancer = new elbv2.ApplicationLoadBalancer(this, "LoadBalancer", {
       vpc: props.vpc,
       internetFacing: true,
-      loadBalancerName: `${props.environment}-spa-alb`,
+      loadBalancerName: `${props.baseName}-alb`,
     });
 
     // CloudFrontのマネージドプレフィックスリストID
@@ -58,7 +59,7 @@ export class AlbService extends Construct {
     this.service = new ecs.FargateService(this, "Service", {
       cluster: props.cluster,
       taskDefinition: props.taskDefinition,
-      serviceName: `${props.environment}-spa-service`,
+      serviceName: `${props.baseName}-service`,
       desiredCount: 2,
       assignPublicIp: false,
       vpcSubnets: {
