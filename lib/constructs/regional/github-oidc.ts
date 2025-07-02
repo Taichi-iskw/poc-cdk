@@ -1,4 +1,5 @@
 import * as cdk from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { GitHubActionsRole } from "./github-actions-role";
 
@@ -8,7 +9,7 @@ export interface GitHubOidcProps {
 }
 
 export class GitHubOidc extends Construct {
-  public readonly role: any;
+  public readonly role: iam.Role;
 
   constructor(scope: Construct, id: string, props: GitHubOidcProps) {
     super(scope, id);

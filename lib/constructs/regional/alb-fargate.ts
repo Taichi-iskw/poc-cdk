@@ -1,5 +1,8 @@
 import * as cdk from "aws-cdk-lib";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as ecs from "aws-cdk-lib/aws-ecs";
+import * as ecr from "aws-cdk-lib/aws-ecr";
 import { Construct } from "constructs";
 import { EcrRepository } from "./ecr-repository";
 import { EcsCluster } from "./ecs-cluster";
@@ -13,10 +16,10 @@ export interface AlbFargateProps {
 }
 
 export class AlbFargate extends Construct {
-  public readonly loadBalancer: any;
-  public readonly targetGroup: any;
-  public readonly service: any;
-  public readonly repository: any;
+  public readonly loadBalancer: elbv2.ApplicationLoadBalancer;
+  public readonly targetGroup: elbv2.ApplicationTargetGroup;
+  public readonly service: ecs.FargateService;
+  public readonly repository: ecr.Repository;
 
   constructor(scope: Construct, id: string, props: AlbFargateProps) {
     super(scope, id);

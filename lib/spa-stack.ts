@@ -1,4 +1,7 @@
 import * as cdk from "aws-cdk-lib";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 import { Construct } from "constructs";
 import { S3StaticSite } from "./constructs/regional/s3-static-site";
 import { CognitoAuth } from "./constructs/regional/cognito";
@@ -12,10 +15,10 @@ export interface SpaStackProps extends cdk.StackProps {
 }
 
 export class SpaStack extends cdk.Stack {
-  public readonly s3Bucket: any;
-  public readonly albLoadBalancer: any;
-  public readonly userPool: any;
-  public readonly userPoolClient: any;
+  public readonly s3Bucket: s3.Bucket;
+  public readonly albLoadBalancer: elbv2.ApplicationLoadBalancer;
+  public readonly userPool: cognito.UserPool;
+  public readonly userPoolClient: cognito.UserPoolClient;
 
   constructor(scope: Construct, id: string, props: SpaStackProps) {
     super(scope, id, props);

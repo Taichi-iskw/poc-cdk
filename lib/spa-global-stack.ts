@@ -5,6 +5,7 @@ import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53_targets from "aws-cdk-lib/aws-route53-targets";
+import * as wafv2 from "aws-cdk-lib/aws-wafv2";
 import { Construct } from "constructs";
 import { CloudFrontDistribution } from "./constructs/global/cloudfront-distribution";
 import { EdgeAuthFunction } from "./constructs/global/edge-auth";
@@ -21,7 +22,7 @@ export class SpaGlobalStack extends cdk.Stack {
   public readonly certificate: acm.Certificate;
   public readonly cloudFrontDistribution: CloudFrontDistribution;
   public readonly edgeAuthFunction: EdgeAuthFunction;
-  public readonly webAcl: any;
+  public readonly webAcl: wafv2.CfnWebACL;
 
   constructor(scope: Construct, id: string, props: SpaGlobalStackProps) {
     super(scope, id, props);
