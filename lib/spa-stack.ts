@@ -62,77 +62,25 @@ export class SpaStack extends cdk.Stack {
       baseName: props.baseName,
     });
 
-    // Export resources for cross-stack reference
-    new cdk.CfnOutput(this, "S3BucketName", {
-      value: s3Site.bucket.bucketName,
-      description: "S3 Bucket Name",
-      exportName: `${props.baseName}-s3-bucket-name`,
-    });
-
-    new cdk.CfnOutput(this, "AlbLoadBalancerArn", {
-      value: albFargate.loadBalancer.loadBalancerArn,
-      description: "ALB Load Balancer ARN",
-      exportName: `${props.baseName}-alb-load-balancer-arn`,
-    });
-
-    new cdk.CfnOutput(this, "AlbLoadBalancerDnsName", {
-      value: albFargate.loadBalancer.loadBalancerDnsName,
-      description: "ALB Load Balancer DNS Name",
-      exportName: `${props.baseName}-alb-load-balancer-dns-name`,
-    });
-
-    new cdk.CfnOutput(this, "UserPoolArn", {
-      value: cognito.userPool.userPoolArn,
-      description: "Cognito User Pool ARN",
-      exportName: `${props.baseName}-user-pool-arn`,
-    });
-
-    new cdk.CfnOutput(this, "UserPoolClientId", {
-      value: cognito.userPoolClient.userPoolClientId,
-      description: "Cognito User Pool Client ID",
-      exportName: `${props.baseName}-user-pool-client-id`,
-    });
-
-    // Outputs
+    // Outputs - Essential information for development and deployment
     new cdk.CfnOutput(this, "UserPoolId", {
       value: cognito.userPool.userPoolId,
-      description: "Cognito User Pool ID",
+      description: "Cognito User Pool ID for frontend authentication",
     });
 
     new cdk.CfnOutput(this, "CognitoDomain", {
       value: cognito.userPoolDomain.domainName,
-      description: "Cognito Domain Name",
-    });
-
-    new cdk.CfnOutput(this, "AlbDnsName", {
-      value: albFargate.loadBalancer.loadBalancerDnsName,
-      description: "Application Load Balancer DNS Name",
+      description: "Cognito Domain Name for frontend authentication",
     });
 
     new cdk.CfnOutput(this, "GitHubActionsRoleArn", {
       value: githubOidc.role.roleArn,
-      description: "GitHub Actions IAM Role ARN",
-    });
-
-    new cdk.CfnOutput(this, "GitHubActionsRoleName", {
-      value: githubOidc.role.roleName,
-      description: "GitHub Actions IAM Role Name",
+      description: "GitHub Actions IAM Role ARN for deployment",
     });
 
     new cdk.CfnOutput(this, "EcrRepositoryUri", {
       value: albFargate.repository.repositoryUri,
-      description: "ECR Repository URI",
+      description: "ECR Repository URI for container image push",
     });
-
-    new cdk.CfnOutput(this, "EcrRepositoryName", {
-      value: albFargate.repository.repositoryName,
-      description: "ECR Repository Name",
-    });
-
-    // Configure CloudFront origins after all resources are created
-    // This will be called by the global stack after this stack is deployed
-    this.node.addDependency(albFargate);
-    this.node.addDependency(cognito);
-    this.node.addDependency(s3Site);
   }
 }

@@ -17,6 +17,12 @@ export interface SpaGlobalStackProps extends cdk.StackProps {
   environment: string;
   repository: string;
   baseName: string;
+  // Regional resources from SpaStack
+  userPoolArn: string;
+  userPoolClientId: string;
+  s3BucketName: string;
+  albLoadBalancerArn: string;
+  albLoadBalancerDnsName: string;
 }
 
 export class SpaGlobalStack extends cdk.Stack {
@@ -49,22 +55,26 @@ export class SpaGlobalStack extends cdk.Stack {
 
     // Create Lambda@Edge function for authentication
     this.edgeAuthFunction = new EdgeAuthFunction(this, "EdgeAuthFunction", {
-      userPool: cognito.UserPool.fromUserPoolArn(
-        this,
-        "ImportedUserPool",
-        cdk.Fn.importValue(`${props.baseName}-user-pool-arn`)
-      ),
+      userPool: cognito.UserPool.fromUserPoolArn(this, "ImportedUserPool", props.userPoolArn!),
       userPoolClient: cognito.UserPoolClient.fromUserPoolClientId(
         this,
         "ImportedUserPoolClient",
-        cdk.Fn.importValue(`${props.baseName}-user-pool-client-id`)
+        props.userPoolClientId!
       ),
       environment: props.environment,
       baseName: props.baseName,
       account: process.env.CDK_DEFAULT_ACCOUNT || "000000000000",
     });
 
-    // Create CloudFront distribution (basic configuration only)
+    // Import resources from SpaStack for CloudFront origins
+    const s3Bucket = s3.Bucket.fromBucketName(this, "ImportedS3Bucket", props.s3BucketName);
+    const albLoadBalancer = elbv2.ApplicationLoadBalancer.fromApplicationLoadBalancerAttributes(this, "ImportedALB", {
+      loadBalancerArn: props.albLoadBalancerArn,
+      loadBalancerDnsName: props.albLoadBalancerDnsName,
+      securityGroupId: "sg-placeholder", // This will be replaced by actual SG ID if needed
+    });
+
+    // Create CloudFront distribution with actual origins
     this.cloudFrontDistribution = new CloudFrontDistribution(this, "CloudFrontDistribution", {
       domainName: props.domainName,
       environment: props.environment,
@@ -72,6 +82,8 @@ export class SpaGlobalStack extends cdk.Stack {
       certificate: this.certificate,
       webAclId: waf.webAcl.attrId,
       edgeAuthFunction: this.edgeAuthFunction.function,
+      s3Bucket,
+      albLoadBalancer,
     });
 
     // Route53: HostedZone lookup & ARecord for CloudFront
@@ -106,29 +118,6 @@ export class SpaGlobalStack extends cdk.Stack {
     new cdk.CfnOutput(this, "CloudFrontDomainName", {
       value: this.cloudFrontDistribution.distribution.distributionDomainName,
       description: "CloudFront Domain Name",
-    });
-  }
-
-  // Method to configure CloudFront origins after regional resources are created
-  public configureCloudFrontOrigins(): void {
-    // Import resources from SpaStack
-    const s3Bucket = s3.Bucket.fromBucketName(
-      this,
-      "ImportedS3Bucket",
-      cdk.Fn.importValue(`${this.baseName}-s3-bucket-name`)
-    );
-
-    const albLoadBalancer = elbv2.ApplicationLoadBalancer.fromApplicationLoadBalancerAttributes(this, "ImportedALB", {
-      loadBalancerArn: cdk.Fn.importValue(`${this.baseName}-alb-load-balancer-arn`),
-      loadBalancerDnsName: cdk.Fn.importValue(`${this.baseName}-alb-load-balancer-dns-name`),
-      securityGroupId: "sg-placeholder", // This will be replaced by actual SG ID if needed
-    });
-
-    // Configure CloudFront origins
-    this.cloudFrontDistribution.configureOrigins({
-      s3Bucket,
-      albLoadBalancer,
-      edgeAuthFunction: this.edgeAuthFunction.function,
     });
   }
 }
